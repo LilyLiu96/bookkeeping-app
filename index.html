@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#4A90D9">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="记账">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <title>记账工作台</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- 左侧导航栏 -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">💰</div>
+        <div class="logo-text">记账工作台</div>
+      </div>
+      <nav class="nav-list">
+        <button class="nav-item active" data-page="expense">
+          <span class="nav-icon">🧾</span>
+          <span class="nav-label">每日支出</span>
+        </button>
+        <button class="nav-item" data-page="income">
+          <span class="nav-icon">💵</span>
+          <span class="nav-label">收入</span>
+        </button>
+        <button class="nav-item" data-page="accounts">
+          <span class="nav-icon">🏦</span>
+          <span class="nav-label">账户</span>
+        </button>
+        <button class="nav-item" data-page="reports">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label">报表</span>
+        </button>
+        <button class="nav-item" data-page="settings">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-label">设置</span>
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="total-balance-card">
+          <div class="balance-label">总资产</div>
+          <div class="balance-amount" id="totalBalance">¥0.00</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content" id="mainContent">
+      <!-- 每日支出页面 -->
+      <section class="page active" id="page-expense">
+        <div class="page-header">
+          <h2>每日支出</h2>
+          <span class="date-display" id="todayDate"></span>
+        </div>
+
+        <div class="record-form-card">
+          <div class="form-section">
+            <label class="form-label">选择分类</label>
+            <div class="category-grid" id="expenseCategoryGrid"></div>
+          </div>
+
+          <div class="form-section">
+            <label class="form-label">金额</label>
+            <div class="amount-input-wrap">
+              <span class="currency-symbol">¥</span>
+              <input type="number" class="amount-input" id="expenseAmount" placeholder="0.00" step="0.01" min="0">
+            </div>
+          </div>
+
+          <div class="form-section">
+            <label class="form-label">选择账户 <span class="required">*</span></label>
+            <div class="account-selector" id="expenseAccountSelector"></div>
+          </div>
+
+          <div class="form-section">
+            <label class="form-label">日期</label>
+            <input type="date" class="text-input" id="expenseDate">
+          </div>
+
+          <div class="form-section">
+            <label class="form-label">备注（选填）</label>
+            <input type="text" class="text-input" id="expenseNote" placeholder="添加备注...">
+          </div>
+
+          <button class="submit-btn expense-btn" id="submitExpense">记一笔支出</button>
+        </div>
+
+        <div class="recent-section">
+          <h3>最近支出</h3>
+          <div class="transaction-list" id="expenseList"></div>
+        </div>
+      </section>
+
+      <!-- 收入页面 -->
+      <section class="page" id="page-income">
+        <div class="page-header">
+          <h2>收入</h2>
+          <span class="date-display" id="todayDate2"></span>
+        </div>
+
+        <div class="record-form-card">
+          <div class="form-section">
+            <label class="form-label">选择分类</label>
+            <div class="category-grid" id="incomeCategoryGrid"></div>
+          </div>
+
+          <div class="form-section">
+            <label class="form-label">金额</label>
+            <div class="amount-input-wrap">
+              <span class="currency-symbol">¥</span>
+              <input type="number" class="amount-input" id="incomeAmount" placeholder="0.00" step="0.01" min="0">
+            </div>
+          </div>
+
+          <div class="form-section">
+            <label class="form-label">选择账户 <span class="required">*</span></label>
+            <div class="account-selector" id="incomeAccountSelector"></div>
+          </div>
+
+          <div class="form-section">
+            <label class="form-label">日期</label>
+            <input type="date" class="text-input" id="incomeDate">
+          </div>
+
+          <div class="form-section">
+            <label class="form-label">备注（选填）</label>
+            <input type="text" class="text-input" id="incomeNote" placeholder="添加备注...">
+          </div>
+
+          <button class="submit-btn income-btn" id="submitIncome">记一笔收入</button>
+        </div>
+
+        <div class="recent-section">
+          <h3>最近收入</h3>
+          <div class="transaction-list" id="incomeList"></div>
+        </div>
+      </section>
+
+      <!-- 账户页面 -->
+      <section class="page" id="page-accounts">
+        <div class="page-header">
+          <h2>我的账户</h2>
+          <button class="add-btn" onclick="App.openAccountModal()">+ 添加账户</button>
+        </div>
+        <div class="account-cards" id="accountCards"></div>
+      </section>
+
+      <!-- 报表页面 -->
+      <section class="page" id="page-reports">
+        <div class="page-header">
+          <h2>报表分析</h2>
+        </div>
+
+        <div class="report-tabs">
+          <button class="report-tab active" data-tab="chart">支出环形图</button>
+          <button class="report-tab" data-tab="detail">明细查看</button>
+        </div>
+
+        <div class="report-content">
+          <!-- 环形图 -->
+          <div class="report-panel active" id="reportChart">
+            <div class="chart-filters">
+              <select class="text-input chart-period" id="chartPeriod">
+                <option value="month">本月</option>
+                <option value="week">本周</option>
+                <option value="year">本年</option>
+                <option value="all">全部</option>
+              </select>
+              <select class="text-input chart-type" id="chartType">
+                <option value="expense">支出分类</option>
+                <option value="income">收入分类</option>
+              </select>
+            </div>
+            <div class="chart-container">
+              <canvas id="donutChart"></canvas>
+            </div>
+            <div class="chart-summary" id="chartSummary"></div>
+            <div class="chart-legend" id="chartLegend"></div>
+          </div>
+
+          <!-- 明细查看 -->
+          <div class="report-panel" id="reportDetail">
+            <div class="detail-filters">
+              <input type="date" class="text-input" id="detailStartDate">
+              <span class="filter-sep">至</span>
+              <input type="date" class="text-input" id="detailEndDate">
+              <select class="text-input" id="detailType">
+                <option value="all">全部</option>
+                <option value="expense">支出</option>
+                <option value="income">收入</option>
+              </select>
+              <button class="filter-btn" onclick="App.renderDetail()">查询</button>
+            </div>
+            <div class="detail-summary" id="detailSummary"></div>
+            <div class="detail-list" id="detailList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 设置页面 -->
+      <section class="page" id="page-settings">
+        <div class="page-header">
+          <h2>设置</h2>
+        </div>
+
+        <!-- 主题设置 -->
+        <div class="settings-card">
+          <h3>🎨 背景颜色</h3>
+          <p class="settings-desc">选择你喜欢的背景主题色</p>
+          <div class="color-palette" id="bgColorPalette"></div>
+          <div class="custom-color-row">
+            <label>自定义颜色</label>
+            <input type="color" id="customBgColor" value="#f0f2f5">
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>🎭 主题模式</h3>
+          <p class="settings-desc">选择明亮或暗黑模式</p>
+          <div class="theme-options">
+            <button class="theme-option active" data-theme="light">☀️ 明亮</button>
+            <button class="theme-option" data-theme="dark">🌙 暗黑</button>
+            <button class="theme-option" data-theme="auto">🖥️ 跟随系统</button>
+          </div>
+        </div>
+
+        <!-- 分类管理 -->
+        <div class="settings-card">
+          <h3>📝 支出分类管理</h3>
+          <p class="settings-desc">添加、编辑或删除支出分类及表情</p>
+          <div class="category-manage-list" id="expenseCategoryManage"></div>
+          <button class="add-category-btn" onclick="App.openCategoryModal('expense')">+ 添加分类</button>
+        </div>
+
+        <div class="settings-card">
+          <h3>💵 收入分类管理</h3>
+          <p class="settings-desc">添加、编辑或删除收入分类及表情</p>
+          <div class="category-manage-list" id="incomeCategoryManage"></div>
+          <button class="add-category-btn" onclick="App.openCategoryModal('income')">+ 添加分类</button>
+        </div>
+
+        <!-- 数据管理 -->
+        <div class="settings-card">
+          <h3>💾 数据管理</h3>
+          <div class="data-actions">
+            <button class="data-btn" onclick="App.exportData()">📤 导出数据</button>
+            <button class="data-btn" onclick="App.importData()">📥 导入数据</button>
+            <button class="data-btn danger" onclick="App.clearAllData()">🗑️ 清空所有数据</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 账户添加/编辑弹窗 -->
+  <div class="modal-overlay" id="accountModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="accountModalTitle">添加账户</h3>
+        <button class="modal-close" onclick="App.closeAccountModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-section">
+          <label class="form-label">选择银行</label>
+          <div class="bank-grid" id="bankGrid"></div>
+        </div>
+        <div class="form-section">
+          <label class="form-label">账户名称</label>
+          <input type="text" class="text-input" id="accountName" placeholder="如：工资卡">
+        </div>
+        <div class="form-section">
+          <label class="form-label">初始余额</label>
+          <div class="amount-input-wrap">
+            <span class="currency-symbol">¥</span>
+            <input type="number" class="amount-input" id="accountBalance" placeholder="0.00" step="0.01">
+          </div>
+        </div>
+        <div class="form-section">
+          <label class="form-label">账号（选填）</label>
+          <input type="text" class="text-input" id="accountNumber" placeholder="卡号后四位">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="cancel-btn" onclick="App.closeAccountModal()">取消</button>
+        <button class="confirm-btn" onclick="App.saveAccount()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 分类添加/编辑弹窗 -->
+  <div class="modal-overlay" id="categoryModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="categoryModalTitle">添加分类</h3>
+        <button class="modal-close" onclick="App.closeCategoryModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-section">
+          <label class="form-label">分类名称</label>
+          <input type="text" class="text-input" id="categoryName" placeholder="如：餐饮">
+        </div>
+        <div class="form-section">
+          <label class="form-label">选择表情</label>
+          <div class="emoji-picker" id="emojiPicker"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="cancel-btn" onclick="App.closeCategoryModal()">取消</button>
+        <button class="confirm-btn" onclick="App.saveCategory()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 提示 -->
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+  <script>
+    // 注册 Service Worker 实现 PWA 离线功能
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('./sw.js').catch(function(err) {
+          console.log('SW registration failed: ', err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>
